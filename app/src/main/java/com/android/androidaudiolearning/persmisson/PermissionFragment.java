@@ -1,9 +1,9 @@
 package com.android.androidaudiolearning.persmisson;
 
-import android.app.Activity;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -11,6 +11,7 @@ import android.provider.Settings;
 import android.util.SparseArray;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
 import java.util.ArrayList;
@@ -52,6 +53,7 @@ public final class PermissionFragment extends Fragment implements Runnable {
         activity.getSupportFragmentManager().beginTransaction().add(this,activity.getClass().getName()).commitAllowingStateLoss();
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.O)
     @Override
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);

@@ -5,10 +5,18 @@
     android:layout_height="match_parent"
     tools:context=".android_record.CameraRecordFragment">
 
-    <!-- TODO: Update blank fragment layout -->
-    <TextView
+    <com.android.androidaudiolearning.android_record.CameraGLView
+        android:id="@+id/cameraView"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:text="@string/hello_blank_fragment" />
+        android:layout_height="match_parent" />
 
+    <ImageButton
+        android:id="@+id/record_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="80dp"
+        android:background="@null"
+        android:scaleType="fitXY"
+        android:layout_gravity="bottom|center"
+        android:src="@drawable/btn_shutter_video" />
 </FrameLayout>

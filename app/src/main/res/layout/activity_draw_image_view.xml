@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:id="@+id/rl_root"
+    tools:context=".android_record.basic.draw.DrawImageViewActivity">
+    <com.android.androidaudiolearning.android_record.basic.draw.CustomImageView
+        android:id="@+id/img_custom"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:visibility="gone"/>
+    <com.android.androidaudiolearning.android_record.basic.draw.CustomSurfaceView
+        android:id="@+id/sf_custom"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:visibility="gone"/>
+</RelativeLayout>

@@ -2,13 +2,11 @@ package com.android.androidaudiolearning.android_record;
 
 import android.os.Bundle;
 import android.widget.Toast;
-
 import androidx.appcompat.app.AppCompatActivity;
 import com.android.androidaudiolearning.R;
 import com.android.androidaudiolearning.persmisson.GlobalPermission;
 import com.android.androidaudiolearning.persmisson.OnPermissionListener;
 import com.android.androidaudiolearning.persmisson.Permission;
-
 import java.util.List;
 
 public class CameraRecordActivity extends AppCompatActivity {
@@ -17,13 +15,17 @@ public class CameraRecordActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_record);
         initPermissionAndIntent(savedInstanceState);
+        /*if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE,Manifest.permission.RECORD_AUDIO,
+                    Manifest.permission.CAMERA}, 5);
+        }*/
+        if(savedInstanceState == null){
+            getSupportFragmentManager().beginTransaction().add(R.id.container,new CameraRecordFragment(),"CameraRecordFragment").commitAllowingStateLoss();
+        }
     }
 
     private void initPermissionAndIntent(Bundle savedInstanceState) {
         initPermission();
-        if(savedInstanceState == null){
-            getSupportFragmentManager().beginTransaction().add(R.id.container,new CameraRecordFragment(),"CameraRecordFragment").commitAllowingStateLoss();
-        }
     }
 
     private void initPermission() {

@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    tools:context=".android_record.basic.OpenGlActivity">
+
+    <Button
+        android:id="@+id/bt_image_show"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="5dp"
+        android:onClick="onClick"
+        android:text="@string/show_image"/>
+
+    <Button
+        android:id="@+id/bt_audio_get"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="5dp"
+        android:onClick="onClick"
+        android:text="@string/audio_record_play"/>
+
+    <Button
+        android:id="@+id/bt_video_get"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="5dp"
+        android:onClick="onClick"
+        android:text="@string/video_record_play"/>
+
+    <Button
+        android:id="@+id/bt_opengl_es"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="5dp"
+        android:onClick="onClick"
+        android:text="@string/opengl_preview"/>
+
+    <Button
+        android:id="@+id/bt_data_solve"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="5dp"
+        android:onClick="onClick"
+        android:text="@string/video_compile"/>
+
+
+    <Button
+        android:id="@+id/bt_data_encoder"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="5dp"
+        android:onClick="onClick"
+        android:text="@string/video_encode_and_decode"/>
+
+
+</LinearLayout>

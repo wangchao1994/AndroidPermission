@@ -3,4 +3,25 @@
 
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="show_image">图片显示</string>
+    <string name="audio_record_play">音频采集和播放</string>
+    <string name="video_record_play">视频采集和播放</string>
+    <string name="opengl_preview">OpengGL ES 样例</string>
+    <string name="video_compile">音视频的分离和合成</string>
+    <string name="video_encode_and_decode">视频和音频的硬编码和解码</string>
+    <string name="audio_start_record">开始采集</string>
+    <string name="audio_stop_record">停止采集</string>
+    <string name="audio_play_record">开始播放</string>
+    <string name="audio_stop_play_record">停止播放</string>
+    <string name="audio_covert_pcm2wav">PCM转化为WAV</string>
+    <string name="audio_play_wav">播放WAV</string>
+    <string name="audio_covert_pcm2aac">PCM转化为AAC</string>
+    <string name="audio_play_aac">播放AAC</string>
+    <string name="need_check_permission">需要检查权限</string>
+    <string name="audio_permisson_denied_tips">Permission Denied</string>
+    <string name="separate_mp4">分离MP4</string>
+    <string name="h264_decode">H264 解码</string>
+    <string name="h264_encode">H264 编码</string>
+    <string name="audio_aac_encode">AAC 编码</string>
+    <string name="encode_process">转码进度</string>
 </resources>

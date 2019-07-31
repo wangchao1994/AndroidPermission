@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    tools:context=".android_record.basic.audio_record.AudioRecordActivity">
+
+    <Button
+        android:id="@+id/bt_start_record"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/audio_start_record"/>
+
+    <Button
+        android:id="@+id/bt_stop_record"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/audio_stop_record"/>
+
+    <Button
+        android:id="@+id/bt_play_record"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/audio_play_record"/>
+
+    <Button
+        android:id="@+id/bt_stop_play_record"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/audio_stop_play_record"/>
+
+    <Button
+        android:id="@+id/bt_pcm2wav"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/audio_covert_pcm2wav"/>
+
+    <Button
+        android:id="@+id/bt_play_wav"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/audio_play_wav"/>
+
+    <Button
+        android:id="@+id/bt_pcm2aac"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/audio_covert_pcm2aac"/>
+
+    <Button
+        android:id="@+id/bt_play_aac"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/audio_play_aac"/>
+
+    <TextView
+        android:id="@+id/tv_encode_process"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/encode_process"/>
+</LinearLayout>

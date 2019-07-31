@@ -1,0 +1,140 @@
+系统版本：Android P
+ 1.系统动态安装第三方apk:
+     public void installTalkPod(final Context context) {
+             boolean apkGranted = isApkGranted(context);
+             if (apkGranted){
+                 startInstallIntent(context);
+             }else{
+                 new AlertDialog.Builder(context)
+                         .setCancelable(false)
+                         .setTitle("To install the app, you need to open the unknown source permission. Please go to the setting to open the permission.")
+                         .setPositiveButton(context.getString(android.R.string.ok), new DialogInterface.OnClickListener() {
+                             public void onClick(DialogInterface d, int w) {
+                                 Uri packageURI = Uri.parse("package:"+ context.getPackageName());
+                                 Intent intent = new Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES,packageURI);
+                                 intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                                 context.startActivity(intent);
+                             }
+                         }).setNegativeButton(context.getString(android.R.string.cancel), new DialogInterface.OnClickListener() {
+                             @Override
+                             public void onClick(DialogInterface dialogInterface, int i) {
+                                dialogInterface.dismiss();
+                             }
+                         }).show();
+             }
+         }
+         private void startInstallIntent(Context context) {
+             File file = new File(THIRD_PACKAGE_PATH);
+             if (!file.exists())return;
+             Uri apkUri = FileProvider.getUriForFile(context,context.getPackageName()+".FileProvider", file);
+             Intent install = new Intent(Intent.ACTION_VIEW);
+             install.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+             install.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+             install.setDataAndType(apkUri, "application/vnd.android.package-archive");
+             context.startActivity(install);
+         }
+        AndroidManifest.xml中添加：
+          <provider
+             android:name="androidx.core.content.FileProvider"
+             android:authorities="{applicationId}.FileProvider"
+             android:exported="false"
+             android:grantUriPermissions="true">
+             <meta-data
+                 android:name="android.support.FILE_PROVIDER_PATHS"
+                 android:resource="@xml/file_path" />
+         </provider>
+         file_path文件：
+         <?xml version="1.0" encoding="utf-8"?>
+         <paths>
+             <external-path
+                 name="apk_file"
+                 path="/Android"/>
+         </paths>
+2.系统静默安装apk
+
+    public void installApk(Context context,String apkFilePath) {
+            File apkFile = new File(apkFilePath);
+            PackageInstaller packageInstaller = context.getPackageManager().getPackageInstaller();
+            PackageInstaller.SessionParams sessionParams
+                    = new PackageInstaller.SessionParams(PackageInstaller
+                    .SessionParams.MODE_FULL_INSTALL);
+            sessionParams.setSize(apkFile.length());
+            int sessionId = createSession(packageInstaller, sessionParams);
+            if (sessionId != -1) {
+                boolean copySuccess = copyInstallFile(packageInstaller, sessionId, apkFilePath);
+                if (copySuccess) {
+                    execInstallCommand(context,packageInstaller, sessionId);
+                }
+            }
+        }
+        private int createSession(PackageInstaller packageInstaller,
+                                  PackageInstaller.SessionParams sessionParams) {
+            int sessionId = -1;
+            try {
+                sessionId = packageInstaller.createSession(sessionParams);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            return sessionId;
+        }
+
+        private boolean copyInstallFile(PackageInstaller packageInstaller,
+                                        int sessionId, String apkFilePath) {
+            InputStream in = null;
+            OutputStream out = null;
+            PackageInstaller.Session session = null;
+            boolean success = false;
+            try {
+                File apkFile = new File(apkFilePath);
+                session = packageInstaller.openSession(sessionId);
+                out = session.openWrite("base.apk", 0, apkFile.length());
+                in = new FileInputStream(apkFile);
+                int total = 0, len;
+                byte[] buffer = new byte[65536];
+                while ((len = in.read(buffer)) != -1) {
+                    total += len;
+                    out.write(buffer, 0, len);
+                }
+                session.fsync(out);
+                success = true;
+            } catch (IOException e) {
+                e.printStackTrace();
+            } finally {
+                try {
+                    if (out != null) {
+                        out.close();
+                        out = null;
+                    }
+                    if (in != null) {
+                        in.close();
+                        in = null;
+                    }
+                    if (session != null) {
+                        session.close();
+                        session = null;
+                    }
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+            return success;
+        }
+
+        private void execInstallCommand(Context context,PackageInstaller packageInstaller, int sessionId) {
+            PackageInstaller.Session session = null;
+            try {
+                session = packageInstaller.openSession(sessionId);
+                Intent intent = new Intent(context, InstallResultReceiver.class);
+                PendingIntent pendingIntent = PendingIntent.getBroadcast(context,
+                        1, intent,
+                        PendingIntent.FLAG_UPDATE_CURRENT);
+                session.commit(pendingIntent.getIntentSender());
+            } catch (IOException e) {
+                e.printStackTrace();
+            } finally {
+                if (session != null) {
+                    session.close();
+                    session = null;
+                }
+            }
+        }

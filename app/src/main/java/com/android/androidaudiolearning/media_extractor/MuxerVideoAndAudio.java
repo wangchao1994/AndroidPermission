@@ -13,8 +13,6 @@ import java.nio.ByteBuffer;
  * 封装音频，视频
  */
 public class MuxerVideoAndAudio {
-
-
     @RequiresApi(api = Build.VERSION_CODES.O)
     public void muxVideoAndAudio(String path, String outPath){
         try {

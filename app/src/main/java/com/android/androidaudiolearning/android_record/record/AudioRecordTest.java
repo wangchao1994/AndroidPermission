@@ -1,8 +1,19 @@
 package com.android.androidaudiolearning.android_record.record;
 
+import android.content.Context;
+import android.content.pm.PackageManager;
 import android.media.AudioFormat;
 import android.media.AudioRecord;
 import android.media.MediaRecorder;
+import android.os.Environment;
+import android.os.storage.StorageManager;
+import android.util.Log;
+
+import java.io.File;
+import java.io.IOException;
+import java.lang.reflect.Method;
+
+import static android.content.Context.STORAGE_SERVICE;
 
 /**
  * 音频录制
@@ -16,8 +27,8 @@ public class AudioRecordTest {
     private AudioRecord mAudioRecord;
     private boolean isRecording = false;
     private AudioFrameListener audioFrameListener;
-    public AudioRecordTest(){
-        startRecord(DEFAULT_SOURCE,DEFAULT_RATE,DEFAULT_CHANNEL,DEFAULT_FORMAT);
+    public AudioRecordTest(Context context){
+        startRecord(context,DEFAULT_SOURCE,DEFAULT_RATE,DEFAULT_CHANNEL,DEFAULT_FORMAT);
     }
     /**
      * 开始录制
@@ -26,7 +37,13 @@ public class AudioRecordTest {
      * @param default_channel
      * @param default_format
      */
-    private void startRecord(int default_source, int default_rate, int default_channel, int default_format) {
+    private void startRecord(Context context,int default_source, int default_rate, int default_channel, int default_format) {
+        PackageManager packageManager = context.getPackageManager();
+        if (!packageManager.hasSystemFeature(PackageManager.FEATURE_MICROPHONE)) {
+            Log.d("audio_record","This device doesn't have a mic!");
+            return;
+        }
+        setCurrentDirPcm();
         //获取内部音频缓冲区大小
         mMinBufferSize = AudioRecord.getMinBufferSize(default_rate,default_channel,default_format);
         if (mMinBufferSize == AudioRecord.ERROR_BAD_VALUE){
@@ -42,6 +59,16 @@ public class AudioRecordTest {
         AudioRecordThread audioRecordThread = new AudioRecordThread();
         audioRecordThread.start();
     }
+
+    private void setCurrentDirPcm() {
+        File mFile = new File(Environment.getExternalStorageDirectory()+"/PCMDemo");
+        try {
+            File mAudioFile = File.createTempFile("recording", ".pcm", mFile);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
     public void stopAudioRecording(){
         isRecording = false;
         if (mAudioRecord.getRecordingState() == AudioRecord.RECORDSTATE_RECORDING){
@@ -56,7 +83,7 @@ public class AudioRecordTest {
                 byte[] buffer = new byte[mMinBufferSize];
                 int result = mAudioRecord.read(buffer, 0, buffer.length);
                 if (audioFrameListener != null){
-                    audioFrameListener.outAudioFrame(result);
+                    audioFrameListener.outAudioFrame(result);//写入文件
                 }
             }
         }
@@ -66,5 +93,34 @@ public class AudioRecordTest {
     }
     public void setAudioFrameListener(AudioFrameListener mAudioFrameListener){
         audioFrameListener = mAudioFrameListener;
+    }
+
+    // 其实只要判断第二张卡在挂载状态
+    public String getSecondaryStoragePath(Context context) {
+        try {
+            StorageManager sm = (StorageManager) context.getSystemService(STORAGE_SERVICE);
+            Method getVolumePathsMethod = StorageManager.class.getMethod("getVolumePaths", null);
+            String[] paths = (String[]) getVolumePathsMethod.invoke(sm, null);
+            if (paths != null){
+                // second element in paths[] is secondary storage path
+                return paths.length <= 1 ? null : paths[1];
+            }
+        } catch (Exception e) {
+            Log.e("audio_record", "getSecondaryStoragePath() failed", e);
+        }
+        return null;
+    }
+
+    // 获取存储卡的挂载状态. path 参数传入上方法得到的路径
+    public String getStorageState(Context context,String path) {
+        try {
+            StorageManager sm = (StorageManager) context.getSystemService(STORAGE_SERVICE);
+            Method getVolumeStateMethod = StorageManager.class.getMethod("getVolumeState", new Class[]{String.class});
+            String state = (String) getVolumeStateMethod.invoke(sm, path);
+            return state;
+        } catch (Exception e) {
+            Log.e("audio_record", "getStorageState() failed", e);
+        }
+        return null;
     }
 }

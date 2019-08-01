@@ -2,80 +2,75 @@ package com.android.androidaudiolearning;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-import android.annotation.SuppressLint;
-import android.content.Context;
-import android.content.pm.PackageInfo;
-import android.content.pm.PackageInstaller;
-import android.content.pm.PackageManager;
+import android.app.AlarmManager;
 import android.media.AudioAttributes;
 import android.media.AudioManager;
-import android.media.MediaPlayer;
 import android.media.SoundPool;
-import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.Environment;
-import android.os.Handler;
-import android.os.Message;
-import android.util.Log;
-import android.widget.Button;
-import android.widget.Toast;
 
-import com.android.androidaudiolearning.persmisson.GlobalPermission;
-import com.android.androidaudiolearning.persmisson.OnPermissionListener;
-import com.android.androidaudiolearning.persmisson.Permission;
-
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.nio.channels.FileChannel;
-import java.util.List;
-
-public class MainActivity extends AppCompatActivity implements SoundPool.OnLoadCompleteListener {
-    private static final int DEFAULT_INVALID_SOUND_ID = -1;
-    private static final int DEFAULT_INVALID_STREAM_ID = -1;
-    private SoundPool mSoundPool;
-    private int mSoundId;
-    private int mStreamID;
-    private float mCruLeftVolume;
-    private float mCurRightVolume;
-
+public class MainActivity extends AppCompatActivity implements SoundPool.OnLoadCompleteListener{
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        //initSoundPool
-        initSoundPool();
+        playAudio();
     }
 
-    private void initSoundPool() {
-        if (mSoundPool == null) {
-            if (Build.VERSION.SDK_INT > Build.VERSION_CODES.LOLLIPOP) {
-                AudioAttributes mAdudioAttributes = null;
-                mAdudioAttributes = new AudioAttributes.Builder()
-                        .setUsage(AudioAttributes.USAGE_MEDIA)
-                        .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
-                        .build();
-                mSoundPool = new SoundPool.Builder()
-                        .setAudioAttributes(mAdudioAttributes)
-                        .setMaxStreams(16)
-                        .build();
-            } else {
-                mSoundPool = new SoundPool(16, AudioManager.STREAM_MUSIC, 6);
-            }
-            mSoundId = mSoundPool.load("", 1);
-            mSoundPool.setOnLoadCompleteListener(this);
+    private SoundPool mSoundPool;
+    private static final int DEFAULT_INVALID_SOUND_ID = -1;
+    private int mSoundId = -1;
+    private int mStreamId = -1;
+    private void playAudio(){
+        SoundPool mSoundPool = createSoundPool();
+        if (mSoundPool == null)return;
+        mSoundPool.setOnLoadCompleteListener(this);
+        if (mSoundId == DEFAULT_INVALID_SOUND_ID){
+            mSoundId = mSoundPool.load(getApplicationContext(),R.raw.speaker_ring_custom,1/*0*/);
+        }else{
+            if (mStreamId == DEFAULT_INVALID_SOUND_ID)
+            onLoadComplete(mSoundPool,0,0);
         }
     }
+    private SoundPool createSoundPool() {
+        if (Build.VERSION.SDK_INT > Build.VERSION_CODES.LOLLIPOP) {
+            AudioAttributes mAudioAttributes = new AudioAttributes.Builder()
+                    .setUsage(AudioAttributes.USAGE_MEDIA)
+                    .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
+                    .build();
+            mSoundPool = new SoundPool.Builder()
+                    .setMaxStreams(16)
+                    .setAudioAttributes(mAudioAttributes)
+                    .build();
+        }else{
+            mSoundPool = new SoundPool(16, AudioManager.STREAM_MUSIC,0);
+        }
+        return mSoundPool;
+    }
 
+    /*
+    1.mSoundId load方法返回的值,指向某个已加载的音频资源
+    2.leftVolume\rightVolume 用来这种左右声道的值.范围 0.0f ~ 1.0f
+    3.priority 流的优先级
+    4.loop 循环播放的次数, -1 表示无限循环
+    5.rate 播放的速率 , 2 表示2倍速度
+    */
     @Override
-    public void onLoadComplete(SoundPool soundPool, int i, int i1) {
+    public void onLoadComplete(SoundPool soundPool, int sampleId, int status) {
         if (mSoundPool != null){
-            if (mStreamID == DEFAULT_INVALID_STREAM_ID){
-                mStreamID = mSoundPool.play(mSoundId, 1.0f, 1.0f, 16, -1, 1.0f);
-            }
+            mStreamId = mSoundPool.play(mSoundId, 1.0f, 1.0f, 16, -1, 1.0f);
         }
     }
+
+    public void pause(){
+        if (mSoundPool != null){
+            mSoundPool.pause(mStreamId);
+        }
+    }
+    public void resume(){
+        if (mSoundPool != null){
+            mSoundPool.resume(mStreamId);
+        }
+    }
+
 }

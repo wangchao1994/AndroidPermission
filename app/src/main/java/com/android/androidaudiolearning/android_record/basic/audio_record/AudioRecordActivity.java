@@ -67,7 +67,6 @@ public class AudioRecordActivity extends AppCompatActivity implements View.OnCli
     private static final String mFileName = "audiorecordtest.pcm";
     //缓冲区中数据写入到数据，因为需要使用IO操作，因此读取数据的过程应该在子线程中执行。
     private Thread mThread;
-
     private DataOutputStream mDataOutputStream;
 
 
@@ -75,6 +74,8 @@ public class AudioRecordActivity extends AppCompatActivity implements View.OnCli
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_audio_record);
+        Log.d("wangchao_log","onCreate------------------------------->");
+
         //initPermission();
         initData();
         initView();
@@ -93,6 +94,7 @@ public class AudioRecordActivity extends AppCompatActivity implements View.OnCli
     }
 
     private void initPermission() {
+        Log.d("wangchao_log","initPermission------------------------------->");
         GlobalPermission.with(this)
                 .permission(Permission.Group.STORAGE, Permission.Group.RECORD_AUDIO)
                 .request(new OnPermissionListener() {
@@ -220,11 +222,15 @@ public class AudioRecordActivity extends AppCompatActivity implements View.OnCli
     }
 
     private void playRecord() {
+
         String path = mFileRoot + File.separator + mFileName;
+        Log.d("wangchao_log","playRecord path------------------------------->"+path);
+
         AudioTrackManager.getInstance().startPlay(path);
     }
 
     private void stopRecord() {
+        Log.d("wangchao_log","stopRecord------------------------------->");
         isRecording = false;
         if (mAudioRecord != null) {
             if (mAudioRecord.getState() == AudioRecord.STATE_INITIALIZED) {
@@ -240,6 +246,7 @@ public class AudioRecordActivity extends AppCompatActivity implements View.OnCli
      * 开始录音
      */
     private void startRecord() {
+        Log.d("wangchao_log","startRecord------------------------------->");
         //AudioRecord.getMinBufferSize的参数是否支持当前的硬件设备
         if (AudioRecord.ERROR_BAD_VALUE == mMinBufferSize || AudioRecord.ERROR == mMinBufferSize) {
                 throw new RuntimeException("Unable to getMinBufferSize");
@@ -268,9 +275,9 @@ public class AudioRecordActivity extends AppCompatActivity implements View.OnCli
         }
     }
 
-
     @Override
     public void run() {
+        Log.d("wangchao_log","startRecord run------------------------------->");
         //开始录音状态
         isRecording = true;
         //创建本地保存文件

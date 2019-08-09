@@ -3,7 +3,6 @@
     xmlns:tools="http://schemas.android.com/tools"
     package="com.android.androidaudiolearning">
 
-    <uses-permission android:name="android.permission.DELETE_PACKAGES" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.CAMERA" />
@@ -44,15 +43,18 @@
         </activity>
         <activity android:name=".android_record.basic.draw.DrawImageViewActivity" />
         <activity android:name=".MainActivity" >
+
+        </activity>
+        <activity android:name=".android_record.CameraRecordActivity" />
+        <activity android:name=".android_record.h264.CameraH264Activity" />
+        <activity android:name=".android_record.basic.OpenGlActivity"></activity>
+        <activity android:name=".android_record.basic.audio_record.demo.AudioTestActivity" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".android_record.CameraRecordActivity" />
-        <activity android:name=".android_record.h264.CameraH264Activity" />
-        <activity android:name=".android_record.basic.OpenGlActivity"></activity>
     </application>
 
 </manifest>

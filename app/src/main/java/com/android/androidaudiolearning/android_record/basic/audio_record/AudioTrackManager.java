@@ -7,6 +7,7 @@ import android.media.AudioTrack;
 import android.media.SoundPool;
 import android.os.Process;
 import android.provider.MediaStore;
+import android.util.Log;
 
 import java.io.DataInputStream;
 import java.io.File;
@@ -76,6 +77,7 @@ public class AudioTrackManager {
     }
 
     public void startPlay(String path){
+        Log.d("wangchao_log","path----------------wav->"+path);
         setPath(path);
         startThread();
     }

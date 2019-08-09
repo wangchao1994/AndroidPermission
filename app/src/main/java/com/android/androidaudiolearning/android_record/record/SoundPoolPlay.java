@@ -12,7 +12,8 @@ public class SoundPoolPlay implements SoundPool.OnLoadCompleteListener{
     private static final int DEFAULT_INVALID_SOUND_ID = -1;
     private int mSoundId = -1;
     private int mStreamId = -1;
-    private void playAudio(Context context){
+
+    public void playAudio(Context context){
         SoundPool mSoundPool = createSoundPool();
         if (mSoundPool == null)return;
         mSoundPool.setOnLoadCompleteListener(SoundPoolPlay.this);

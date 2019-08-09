@@ -64,67 +64,102 @@ Android音视频开发流程：
 		 * 音频录制
 		 */
 		public class AudioRecordTest {
-			private final int DEFAULT_SOURCE = MediaRecorder.AudioSource.MIC;  //麦克风
-			private final int DEFAULT_RATE = 44100;    //采样率
-			private final int DEFAULT_CHANNEL = AudioFormat.CHANNEL_IN_STEREO;   //双通道(左右声道)
-			private final int DEFAULT_FORMAT = AudioFormat.ENCODING_PCM_16BIT;   //数据位宽16位
-			private int mMinBufferSize;
-			private AudioRecord mAudioRecord;
-			private boolean isRecording = false;
-			private AudioFrameListener audioFrameListener;
-			public AudioRecordTest(){
-				startRecord(DEFAULT_SOURCE,DEFAULT_RATE,DEFAULT_CHANNEL,DEFAULT_FORMAT);
-			}
-			/**
-			 * 开始录制
-			 * @param default_source
-			 * @param default_rate
-			 * @param default_channel
-			 * @param default_format
-			 */
-			private void startRecord(int default_source, int default_rate, int default_channel, int default_format) {
-				//获取内部音频缓冲区大小
-				mMinBufferSize = AudioRecord.getMinBufferSize(default_rate,default_channel,default_format);
-				if (mMinBufferSize == AudioRecord.ERROR_BAD_VALUE){
-					return;
-				}
-				mAudioRecord = new AudioRecord(default_source,default_rate,default_channel,default_format,mMinBufferSize);
-				if (mAudioRecord.getState() == AudioRecord.STATE_UNINITIALIZED){
-					return;
-				}
-				//初始化完成后进行录制音频操作
-				mAudioRecord.startRecording();
-				isRecording = true;
-				AudioRecordThread audioRecordThread = new AudioRecordThread();
-				audioRecordThread.start();
-			}
-			public void stopAudioRecording(){
-				isRecording = false;
-				if (mAudioRecord.getRecordingState() == AudioRecord.RECORDSTATE_RECORDING){
-					mAudioRecord.stop();
-				}
-				mAudioRecord.release();
-			}
-			class AudioRecordThread extends Thread{
-				@Override
-				public void run() {
-					while (isRecording){
-						byte[] buffer = new byte[mMinBufferSize];
-						int result = mAudioRecord.read(buffer, 0, buffer.length);
-						if (audioFrameListener != null){
-							audioFrameListener.outAudioFrame(result);
-							//直接将录制的结果保存至文件中
-						}
-					}
-				}
-			}
-			public interface AudioFrameListener{
-				void outAudioFrame(int frame);
-			}
-			public void setAudioFrameListener(AudioFrameListener mAudioFrameListener){
-				audioFrameListener = mAudioFrameListener;
-			}
-		}
+                private static final String TAG = AudioRecordTest.class.getSimpleName();
+                private static final int DEFAULT_SOURCE = MediaRecorder.AudioSource.MIC;
+                private static final int DEFAULT_SAMPLE_RATE = 44100;
+                private static final int DEFAULT_CHANNEL_CONFIG = AudioFormat.CHANNEL_IN_STEREO;
+                private static final int DEFAULT_AUDIO_FORMAT = AudioFormat.ENCODING_PCM_16BIT;
+                private AudioRecord mAudioRecord;
+                private int mMinBufferSize = 0;
+                private Thread mAudioRecordThread;
+                private boolean mIsRecordStart;
+                private volatile boolean isLoopExist;
+
+                /**
+                 * 开始录制
+                 * @return
+                 */
+                public boolean startRecord(){
+                    return startRecord(DEFAULT_SOURCE, DEFAULT_SAMPLE_RATE, DEFAULT_CHANNEL_CONFIG,
+                            DEFAULT_AUDIO_FORMAT);
+                }
+
+                private boolean startRecord(int defaultSource, int defaultSampleRate, int defaultChannelConfig, int defaultAudioFormat) {
+                    if (mIsRecordStart){
+                        Log.d("audio_record","record already start------------->");
+                        return false;
+                    }
+                    mMinBufferSize = AudioRecord.getMinBufferSize(defaultSampleRate,defaultChannelConfig,defaultAudioFormat);
+                    if (mMinBufferSize == AudioRecord.ERROR_BAD_VALUE){
+                        Log.d("audio_record","invalid params------------->");
+                        return false;
+                    }
+                    mAudioRecord = new AudioRecord(defaultSource,defaultSampleRate,defaultChannelConfig,defaultAudioFormat,mMinBufferSize);
+                    if (mAudioRecord.getState() == AudioRecord.STATE_UNINITIALIZED){
+                        Log.d("audio_record","AudioRecord initialize fail------------->");
+                        return false;
+                    }
+                    mAudioRecord.startRecording();
+                    isLoopExist = false;
+                    mAudioRecordThread = new AudioRecordThread();
+                    mAudioRecordThread.start();
+                    mIsRecordStart = true;
+                    Log.d("audio_record","AudioRecord start success ------------->");
+                    return false;
+                }
+
+                /**
+                 * 停止录制
+                 */
+                public void stopRecord(){
+                    if (!mIsRecordStart){
+                        Log.d("audio_record","AudioRecord already stop ------------->");
+                        return;
+                    }
+                    isLoopExist = true;
+                    try {
+                        mAudioRecordThread.interrupt();
+                        mAudioRecordThread.join(1000);
+                    }
+                    catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                    if (mAudioRecord.getRecordingState() == AudioRecord.RECORDSTATE_RECORDING){
+                        mAudioRecord.stop();
+                    }
+                    mAudioRecord.release();
+                    mIsRecordStart = false;
+                    onAudioFrameDataListener = null;
+                }
+
+                class AudioRecordThread extends Thread{
+                    @Override
+                    public void run() {
+                        while (!isLoopExist){
+                            byte[] buffer = new byte[mMinBufferSize];
+                            int read = mAudioRecord.read(buffer, 0, /*buffer.length*/mMinBufferSize);
+                            if (read == AudioRecord.ERROR_INVALID_OPERATION) {
+                                Log.d("audio_record","AudioRecord ERROR_INVALID_OPERATION------------->");
+                            } else if (read == AudioRecord.ERROR_BAD_VALUE) {
+                                Log.d("audio_record","AudioRecord ERROR_BAD_VALUE ------------->");
+                            }else {
+                                if (onAudioFrameDataListener != null){
+                                    onAudioFrameDataListener.outAudioDataFrame(read);
+                                }
+                            }
+                        }
+                    }
+                }
+
+                public interface OnAudioFrameDataListener{
+                    void outAudioDataFrame(int frame);
+                }
+                private OnAudioFrameDataListener onAudioFrameDataListener;
+                public void setOnAudioFrameDataListener(OnAudioFrameDataListener audioFrameDataListener){
+                    this.onAudioFrameDataListener = audioFrameDataListener;
+                }
+            }
+
 
 		MediaRecorder录制：
 	    private final String RECORD_PATH = Environment.getExternalStorageDirectory()+File.separator+ "test.amr";
@@ -200,57 +235,86 @@ Android音视频开发流程：
 		/**
 		 * 音频播放
 		 */
-		public class AudioPlayerTest {
-			private final int DEFAULT_STREAM_TYPE = AudioManager.STREAM_MUSIC;  //流音乐
-			private final int DEFAULT_RATE = 44100;    //采样率
-			private final int DEFAULT_CHANNEL = AudioFormat.CHANNEL_IN_STEREO;   //双通道(左右声道)
-			private final int DEFAULT_FORMAT = AudioFormat.ENCODING_PCM_16BIT;   //数据位宽16位
-			private static final int DEFAULT_PLAY_MODE = AudioTrack.MODE_STREAM;
-			private boolean isPlaying = false;
-			private int minBufferSize;
-			private AudioTrack audioTrack;
-			public AudioPlayerTest(){
-				startPlay(DEFAULT_STREAM_TYPE,DEFAULT_RATE,DEFAULT_CHANNEL,DEFAULT_FORMAT,DEFAULT_PLAY_MODE);
-			}
-			private void startPlay(int default_stream_type, int default_rate, int default_channel, int default_format, int defaultPlayMode) {
-				if (isPlaying){
-				    Log.d("audio_play","isPlaying---->");
-				    return;
-				}
-				minBufferSize = AudioTrack.getMinBufferSize(default_rate, default_channel, default_format);
-				if (minBufferSize == AudioTrack.ERROR_BAD_VALUE){
-				    return;
-				}
-				audioTrack = new AudioTrack(DEFAULT_STREAM_TYPE,DEFAULT_RATE,DEFAULT_CHANNEL,DEFAULT_FORMAT,minBufferSize,DEFAULT_PLAY_MODE);
-				if (audioTrack.getState() == AudioTrack.STATE_UNINITIALIZED){
-				    return;
-				}
-				isPlaying = true;
-			}
-			private void play(byte[] audioData,int offsetInBytes, int sizeInBytes){
-				if (!isPlaying){
-				    Log.d("audio_play", "AudioTrack not start");
-				    return;
-				}
-				if (sizeInBytes < minBufferSize){
-				    //AudioTrack内部音频缓冲区的大小，该值不能低于一帧音频祯数据的大小
-				}
-				if(audioTrack.write(audioData,offsetInBytes,sizeInBytes)!=minBufferSize){
-				    Log.d("audio_play", "AudioTrack can not write all the data");
-				}
-				audioTrack.play();
-			}
-			public void stop(){
-				if (!isPlaying){
-				    Log.d("audio_play", "AudioTrack not start");
-				    return;
-				}
-				if (audioTrack.getPlayState() == AudioTrack.PLAYSTATE_PLAYING){
-				    audioTrack.stop();
-				}
-				audioTrack.release();
-			}
-		}
+		public class AudioPlayTest {
+            /**默认播放类型*/
+            private static final int DEFAULT_STREAM_TYPE = AudioManager.STREAM_MUSIC;
+            /**默认音频帧率*/
+            private static final int DEFAULT_SAMPLE_RATE = 44100;
+            /**默认声道配置*/
+            private static final int DEFAULT_CHANNEL_CONFIG = AudioFormat.CHANNEL_IN_STEREO;
+            /**默认声音编码格式*/
+            private static final int DEFAULT_AUDIO_FORMAT = AudioFormat.ENCODING_PCM_16BIT;
+            /**默认播放模式*/
+            private static final int DEFAULT_PLAY_MODE = AudioTrack.MODE_STREAM;
+            private boolean mIsPlayStarted = false;
+            private int mMinBufferSize = 0;
+            private AudioTrack mAudioTrack;
+
+            /**
+             * 开始播放
+             * @return
+             */
+            public boolean startPlay(){
+                return startPlay(DEFAULT_STREAM_TYPE,DEFAULT_SAMPLE_RATE,DEFAULT_CHANNEL_CONFIG,DEFAULT_AUDIO_FORMAT);
+            }
+
+            private boolean startPlay(int defaultStreamType, int defaultSampleRate, int defaultChannelConfig, int defaultAudioFormat) {
+                if (mIsPlayStarted){
+                    Log.d("audio_record","AudioTrack already start play ------------->");
+                    return false;
+                }
+                mMinBufferSize = AudioTrack.getMinBufferSize(defaultSampleRate,defaultChannelConfig,defaultAudioFormat);
+                if (mMinBufferSize == AudioTrack.ERROR_BAD_VALUE){
+                    Log.d("audio_record","invalid params------------->");
+                    return false;
+                }
+                mAudioTrack = new AudioTrack(defaultStreamType,defaultSampleRate,defaultChannelConfig,defaultAudioFormat,mMinBufferSize,DEFAULT_PLAY_MODE);
+                if (mAudioTrack.getState() == AudioTrack.STATE_UNINITIALIZED){
+                    Log.d("audio_record","AudioTrack initialize fail------------->");
+                }
+                mIsPlayStarted = true;
+                return false;
+            }
+
+            /**
+             * 停止录制
+             */
+            public void stopPlay(){
+                if (!mIsPlayStarted){
+                    Log.d("audio_record","AudioTrack already stop------------->");
+                    return;
+                }
+                if (mAudioTrack.getPlayState() == AudioTrack.PLAYSTATE_PLAYING){
+                    mAudioTrack.stop();
+                }
+                mAudioTrack.release();
+                mIsPlayStarted = false;
+            }
+
+            /**
+             * 开始播放
+             * @param audioFrame
+             * @param offsetInBytes
+             * @param sizeInBytes
+             * @return
+             */
+            public boolean play(byte[] audioFrame,int offsetInBytes, int sizeInBytes){
+                if (!mIsPlayStarted){
+                    Log.d("audio_record","AudioTrack play not started!");
+                    return false;
+                }
+                //AudioTrack内部音频缓冲区的大小，该值不能低于一帧音频祯数据的大小
+                if (sizeInBytes < mMinBufferSize){
+                    Log.d("audio_record","audio data not enough!");
+                    return false;
+                }
+                if (mAudioTrack.write(audioFrame,offsetInBytes,sizeInBytes) != sizeInBytes) {
+                    Log.e("audio_record", "Could not write all the samples to the audio device !");
+                }
+                mAudioTrack.play();
+                return true;
+            }
+        }
 
 		MediaPlayer播放音频：
 			1.//直接播放文件音频
@@ -380,6 +444,10 @@ Android音视频开发流程：
 			};
 
 二：wav文件的存储和解析
+
+    wav 格式，与 bitmap 一样，都是微软开发的一种文件格式规范，它们都有一个相似之处，就是整个文件分为两部分，第一部分是“文件头”，记录重要的参数信息，
+    对于音频而言，就包括：采样率、通道数、位宽等等，对于图像而言，就包括：图像的宽高、色彩位数等等；第二部分是“数据块”，即一帧一帧的二进制数据，对于音频而言，就是原始的 PCM 数据；对于图像而言，就是 RGB 数据。
+
 	wav:一种无损的音频文件格式	,pcm是无损wav文件中音频数据的一种编码方式，wav还可以用其它方式编码。
 	pcm是一种未经压缩的编码方式
 	wav是一种无损的音频文件格式
@@ -493,6 +561,9 @@ Android音视频开发流程：
 		}
 	}
 
+
+音频数据的编解码：
+    MediaCodec
 
 三：视频的采集（Camera预览数据,GoogleCamera）
 
@@ -1013,6 +1084,15 @@ bitmap的五种压缩方式：
 
      4.RGB_565压缩：
         顾名思义，直接修改inPreferredConfig为Bitmap.Config.RGB_565，因为ARGB_4444画质不好，所以如果对透明度没有要求的话直接改为RGB_565
+
+
+图像处理技巧:
+    >色彩特效处理
+    >图形特效处理
+    >画笔特效处理
+    >SurfaceView
+
+    色彩特效处理:
 
 
 添加自定义文字：
